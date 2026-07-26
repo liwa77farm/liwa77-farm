@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#194d38">
+  <meta name="description" content="نظام تسجيل وإدارة مزرعة ليوا 77">
+  <title>إدارة مزرعة ليوا 77</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <form id="loginForm" class="login-card">
+      <div class="brand-mark large">77</div>
+      <h1>مزرعة ليوا 77</h1>
+      <p>أدخل اسمك ورمز المزرعة لبدء تسجيل الأعمال.</p>
+      <label>اسم العامل
+        <input name="workerName" autocomplete="name" placeholder="مثال: محمد" required>
+      </label>
+      <label>رمز المزرعة
+        <input name="pin" inputmode="numeric" autocomplete="current-password" placeholder="••••" required>
+      </label>
+      <button class="btn primary full" type="submit">دخول</button>
+      <small id="loginMessage" class="login-message"></small>
+    </form>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">77</div>
+        <div><h1 id="farmNameSide">مزرعة ليوا 77</h1><p>نظام إدارة المزرعة</p></div>
+      </div>
+      <nav class="nav-list" aria-label="القائمة الرئيسية">
+        <button class="nav-item active" data-section="dashboard">لوحة التحكم</button>
+        <button class="nav-item" data-section="harvest">الحصاد</button>
+        <button class="nav-item" data-section="trees">الأشجار</button>
+        <button class="nav-item" data-section="maintenance">الصيانة</button>
+        <button class="nav-item" data-section="irrigation">الري</button>
+        <button class="nav-item" data-section="tasks">المهام</button>
+        <button class="nav-item" data-section="expenses">المصروفات</button>
+        <button class="nav-item" data-section="inventory">المخزون</button>
+        <button class="nav-item" data-section="reports">التقارير</button>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="syncDot" class="status-dot"></span>
+        <span id="syncText">جاري الاتصال...</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" aria-label="فتح القائمة">☰</button>
+        <div class="page-head"><h2 id="pageTitle">لوحة التحكم</h2><p id="todayText"></p></div>
+        <div class="top-actions">
+          <span class="worker-chip">العامل: <strong id="workerNameText">—</strong></span>
+          <button class="btn secondary" id="syncButton" type="button">تحديث</button>
+          <button class="btn secondary" id="logoutButton" type="button">خروج</button>
+        </div>
+      </header>
+
+      <div id="setupBanner" class="setup-banner" hidden>
+        <strong>النسخة تعمل محلياً فقط حالياً.</strong>
+        أضف بيانات Supabase داخل ملف <code>config.js</code> لتصبح السجلات مشتركة بين جميع الأجهزة.
+      </div>
+
+      <section class="page-section active" id="dashboard">
+        <figure class="farm-hero" aria-label="صورة مزرعة ليوا 77">
+          <img src="assets/liwa77-dashboard.webp" alt="رسم نخلة وكثبان رملية يحمل اسم Liwa 77">
+        </figure>
+        <div class="summary-grid">
+          <article class="summary-card"><span>إجمالي الأشجار</span><strong id="statTrees">0</strong><small>جميع الأصناف والمناطق</small></article>
+          <article class="summary-card"><span>حصاد هذا الشهر</span><strong id="statHarvest">0 كجم</strong><small id="statHarvestRevenue">0 د.إ</small></article>
+          <article class="summary-card warning"><span>صيانة مستحقة</span><strong id="statMaintenance">0</strong><small>متأخرة أو خلال 14 يوماً</small></article>
+          <article class="summary-card"><span>المهام المفتوحة</span><strong id="statTasks">0</strong><small id="statUrgentTasks">0 عالية الأولوية</small></article>
+          <article class="summary-card"><span>مصروفات هذا الشهر</span><strong id="statExpenses">0 د.إ</strong><small>المصاريف المسجلة</small></article>
+          <article class="summary-card"><span>مواد منخفضة</span><strong id="statLowStock">0</strong><small>تحتاج إعادة طلب</small></article>
+        </div>
+        <div class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-heading"><div><h3>الأعمال القادمة</h3><p>المهام والصيانة الأقرب</p></div></div>
+            <div id="upcomingList" class="activity-list empty-state">لا توجد أعمال قادمة.</div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading"><div><h3>آخر التسجيلات</h3><p>أحدث ما أضافه العمال</p></div></div>
+            <div id="recentActivity" class="activity-list empty-state">لا توجد سجلات حتى الآن.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="page-section" id="harvest">
+        <div class="section-grid">
+          <article class="panel form-panel">
+            <div class="panel-heading"><div><h3>تسجيل حصاد</h3><p>سجّل الكمية والجودة والوجهة.</p></div></div>
+            <form id="harvestForm" class="entry-form">
+              <input type="hidden" name="id">
+              <div class="form-grid">
+                <label>التاريخ<input type="date" name="date" required></label>
+                <label>المحصول / الصنف<input name="variety" placeholder="مثال: خلاص" required></label>
+                <label>الكمية (كجم)<input type="number" name="quantity" min="0" step="0.1" required></label>
+                <label>الجودة<select name="grade"><option value="ممتاز">ممتاز</option><option value="درجة أ">درجة أ</option><option value="درجة ب">درجة ب</option><option value="للتصنيع">للتصنيع</option></select></label>
+                <label>المنطقة / الحقل<input name="zone" placeholder="مثال: الحقل الشمالي"></label>
+                <label>عدد العمال<input type="number" name="workers" min="0" step="1"></label>
+                <label>الوجهة<input name="destination" placeholder="المخزن أو السوق أو العميل"></label>
+                <label>الإيراد (د.إ)<input type="number" name="revenue" min="0" step="0.01"></label>
+                <label class="full-width">ملاحظات<textarea name="notes" rows="3"></textarea></label>
+              </div>
+              <div class="form-actions"><button class="btn primary" type="submit">حفظ الحصاد</button><button class="btn text cancel-edit" type="button">إلغاء التعديل</button></div>
+            </form>
+          </article>
+          <article class="panel table-panel">
+            <div class="panel-heading table-heading"><div><h3>سجلات الحصاد</h3><p id="harvestCountText">0 سجل</p></div><input class="search-input" data-search="harvest" placeholder="بحث"></div>
+            <div class="table-wrap"><table id="harvestTable"><thead><tr><th>التاريخ</th><th>الصنف</th><th>المنطقة</th><th>الكمية</th><th>الجودة</th><th>سجّلها</th><th></th></tr></thead><tbody></tbody></table></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="page-section" id="trees">
+        <div class="section-grid">
+          <article class="panel form-panel">
+            <div class="panel-heading"><div><h3>إضافة مجموعة أشجار</h3><p>العدد والصنف والحالة الصحية.</p></div></div>
+            <form id="treesForm" class="entry-form">
+              <input type="hidden" name="id">
+              <div class="form-grid">
+                <label>صنف الشجرة<input name="variety" placeholder="مثال: خلاص" required></label>
+                <label>عدد الأشجار<input type="number" name="count" min="1" step="1" required></label>
+                <label>المنطقة / الحقل<input name="zone" required></label>
+                <label>سنة الزراعة<input type="number" name="plantingYear" min="1900" max="2100"></label>
+                <label>الحالة الصحية<select name="health"><option value="سليمة">سليمة</option><option value="تحتاج متابعة">تحتاج متابعة</option><option value="تحت العلاج">تحت العلاج</option><option value="ميتة / للإزالة">ميتة / للإزالة</option></select></label>
+                <label>خط الري<input name="irrigationLine"></label>
+                <label class="full-width">ملاحظات<textarea name="notes" rows="3"></textarea></label>
+              </div>
+              <div class="form-actions"><button class="btn primary" type="submit">حفظ الأشجار</button><button class="btn text cancel-edit" type="button">إلغاء التعديل</button></div>
+            </form>
+          </article>
+          <article class="panel table-panel"><div class="panel-heading table-heading"><div><h3>سجل الأشجار</h3><p id="treesCountText">0 سجل</p></div><input class="search-input" data-search="trees" placeholder="بحث"></div><div class="table-wrap"><table id="treesTable"><thead><tr><th>الصنف</th><th>المنطقة</th><th>العدد</th><th>سنة الزراعة</th><th>الحالة</th><th>سجّلها</th><th></th></tr></thead><tbody></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section class="page-section" id="maintenance">
+        <div class="section-grid">
+          <article class="panel form-panel"><div class="panel-heading"><div><h3>تسجيل صيانة</h3><p>العمل المنجز والموعد القادم.</p></div></div>
+            <form id="maintenanceForm" class="entry-form"><input type="hidden" name="id"><div class="form-grid">
+              <label>تاريخ العمل<input type="date" name="date" required></label>
+              <label>نوع الصيانة<select name="type"><option>إصلاح الري</option><option>صيانة المضخة</option><option>تسميد</option><option>مكافحة الآفات</option><option>تقليم</option><option>صيانة المعدات</option><option>السياج / المنشآت</option><option>أخرى</option></select></label>
+              <label>المنطقة / المعدة<input name="zone" required></label>
+              <label>الحالة<select name="status"><option>مكتمل</option><option>مجدول</option><option>قيد التنفيذ</option><option>بانتظار قطع الغيار</option></select></label>
+              <label>التكلفة (د.إ)<input type="number" name="cost" min="0" step="0.01"></label>
+              <label>موعد الصيانة القادم<input type="date" name="nextDue"></label>
+              <label>المكلّف بالعمل<input name="assignedTo"></label>
+              <label class="full-width">تفاصيل<textarea name="details" rows="3"></textarea></label>
+            </div><div class="form-actions"><button class="btn primary" type="submit">حفظ الصيانة</button><button class="btn text cancel-edit" type="button">إلغاء التعديل</button></div></form>
+          </article>
+          <article class="panel table-panel"><div class="panel-heading table-heading"><div><h3>سجلات الصيانة</h3><p id="maintenanceCountText">0 سجل</p></div><input class="search-input" data-search="maintenance" placeholder="بحث"></div><div class="table-wrap"><table id="maintenanceTable"><thead><tr><th>التاريخ</th><th>النوع</th><th>المنطقة</th><th>الحالة</th><th>القادم</th><th>سجّلها</th><th></th></tr></thead><tbody></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section class="page-section" id="irrigation">
+        <div class="section-grid">
+          <article class="panel form-panel"><div class="panel-heading"><div><h3>تسجيل ري</h3><p>المدة والمياه وحالة النظام.</p></div></div>
+            <form id="irrigationForm" class="entry-form"><input type="hidden" name="id"><div class="form-grid">
+              <label>التاريخ<input type="date" name="date" required></label><label>المنطقة / خط الري<input name="zone" required></label>
+              <label>المدة (دقيقة)<input type="number" name="duration" min="0" step="1" required></label><label>المياه (لتر)<input type="number" name="litres" min="0" step="1"></label>
+              <label>حالة النظام<select name="status"><option>طبيعي</option><option>ضغط منخفض</option><option>تم العثور على تسرب</option><option>نقاط التنقيط مسدودة</option><option>مشكلة في المضخة</option></select></label><label>المشغّل<input name="operator"></label>
+              <label class="full-width">ملاحظات<textarea name="notes" rows="3"></textarea></label>
+            </div><div class="form-actions"><button class="btn primary" type="submit">حفظ الري</button><button class="btn text cancel-edit" type="button">إلغاء التعديل</button></div></form>
+          </article>
+          <article class="panel table-panel"><div class="panel-heading table-heading"><div><h3>سجلات الري</h3><p id="irrigationCountText">0 سجل</p></div><input class="search-input" data-search="irrigation" placeholder="بحث"></div><div class="table-wrap"><table id="irrigationTable"><thead><tr><th>التاريخ</th><th>المنطقة</th><th>المدة</th><th>المياه</th><th>الحالة</th><th>سجّلها</th><th></th></tr></thead><tbody></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section class="page-section" id="tasks">
+        <div class="section-grid">
+          <article class="panel form-panel"><div class="panel-heading"><div><h3>إضافة مهمة</h3><p>حدّد المسؤول والأولوية والموعد.</p></div></div>
+            <form id="tasksForm" class="entry-form"><input type="hidden" name="id"><div class="form-grid">
+              <label>المهمة<input name="title" required></label><label>تاريخ الاستحقاق<input type="date" name="dueDate" required></label>
+              <label>الفئة<select name="category"><option>حصاد</option><option>صيانة</option><option>ري</option><option>العناية بالأشجار</option><option>مشتريات</option><option>إدارة</option></select></label>
+              <label>الأولوية<select name="priority"><option>عالية</option><option selected>متوسطة</option><option>منخفضة</option></select></label>
+              <label>المكلّف<input name="assignedTo"></label><label>الحالة<select name="status"><option>مفتوحة</option><option>قيد التنفيذ</option><option>مكتمل</option></select></label>
+              <label class="full-width">التفاصيل<textarea name="details" rows="3"></textarea></label>
+            </div><div class="form-actions"><button class="btn primary" type="submit">حفظ المهمة</button><button class="btn text cancel-edit" type="button">إلغاء التعديل</button></div></form>
+          </article>
+          <article class="panel table-panel"><div class="panel-heading table-heading"><div><h3>المهام</h3><p id="tasksCountText">0 مهمة</p></div><input class="search-input" data-search="tasks" placeholder="بحث"></div><div class="table-wrap"><table id="tasksTable"><thead><tr><th>الموعد</th><th>المهمة</th><th>الأولوية</th><th>المكلّف</th><th>الحالة</th><th>سجّلها</th><th></th></tr></thead><tbody></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section class="page-section" id="expenses">
+        <div class="section-grid">
+          <article class="panel form-panel"><div class="panel-heading"><div><h3>تسجيل مصروف</h3><p>تابع تكاليف تشغيل المزرعة.</p></div></div>
+            <form id="expensesForm" class="entry-form"><input type="hidden" name="id"><div class="form-grid">
+              <label>التاريخ<input type="date" name="date" required></label><label>الفئة<select name="category"><option>عمالة</option><option>مياه</option><option>كهرباء</option><option>أسمدة</option><option>مبيدات</option><option>معدات</option><option>إصلاحات</option><option>نقل</option><option>تغليف</option><option>أخرى</option></select></label>
+              <label>الوصف<input name="description" required></label><label>المبلغ (د.إ)<input type="number" name="amount" min="0" step="0.01" required></label>
+              <label>المورّد<input name="supplier"></label><label>طريقة الدفع<select name="paymentMethod"><option>نقداً</option><option>بطاقة</option><option>تحويل بنكي</option><option>آجل / فاتورة</option></select></label>
+              <label>رقم المرجع / الفاتورة<input name="reference"></label><label class="full-width">ملاحظات<textarea name="notes" rows="3"></textarea></label>
+            </div><div class="form-actions"><button class="btn primary" type="submit">حفظ المصروف</button><button class="btn text cancel-edit" type="button">إلغاء التعديل</button></div></form>
+          </article>
+          <article class="panel table-panel"><div class="panel-heading table-heading"><div><h3>المصروفات</h3><p id="expensesCountText">0 سجل</p></div><input class="search-input" data-search="expenses" placeholder="بحث"></div><div class="table-wrap"><table id="expensesTable"><thead><tr><th>التاريخ</th><th>الفئة</th><th>الوصف</th><th>المورّد</th><th>المبلغ</th><th>سجّلها</th><th></th></tr></thead><tbody></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section class="page-section" id="inventory">
+        <div class="section-grid">
+          <article class="panel form-panel"><div class="panel-heading"><div><h3>إضافة مادة للمخزون</h3><p>تابع الأسمدة والمبيدات والقطع.</p></div></div>
+            <form id="inventoryForm" class="entry-form"><input type="hidden" name="id"><div class="form-grid">
+              <label>اسم المادة<input name="item" required></label><label>الفئة<select name="category"><option>أسمدة</option><option>مبيدات</option><option>قطع ري</option><option>أدوات</option><option>تغليف</option><option>وقود</option><option>أخرى</option></select></label>
+              <label>الكمية الحالية<input type="number" name="quantity" min="0" step="0.1" required></label><label>الوحدة<input name="unit" placeholder="كجم، لتر، قطعة" required></label>
+              <label>حد إعادة الطلب<input type="number" name="minimumLevel" min="0" step="0.1"></label><label>مكان التخزين<input name="location"></label>
+              <label>المورّد<input name="supplier"></label><label>تاريخ الانتهاء<input type="date" name="expiryDate"></label>
+              <label class="full-width">ملاحظات<textarea name="notes" rows="3"></textarea></label>
+            </div><div class="form-actions"><button class="btn primary" type="submit">حفظ المادة</button><button class="btn text cancel-edit" type="button">إلغاء التعديل</button></div></form>
+          </article>
+          <article class="panel table-panel"><div class="panel-heading table-heading"><div><h3>المخزون</h3><p id="inventoryCountText">0 مادة</p></div><input class="search-input" data-search="inventory" placeholder="بحث"></div><div class="table-wrap"><table id="inventoryTable"><thead><tr><th>المادة</th><th>الفئة</th><th>الكمية</th><th>حد الطلب</th><th>المكان</th><th>سجّلها</th><th></th></tr></thead><tbody></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section class="page-section" id="reports">
+        <div class="reports-grid">
+          <article class="panel"><div class="panel-heading"><div><h3>ملخص المزرعة</h3><p>إجماليات السجلات الحالية</p></div></div><dl id="reportTotals" class="totals-list"></dl></article>
+          <article class="panel"><div class="panel-heading"><div><h3>التصدير والنسخ الاحتياطي</h3><p>احفظ نسخة من بيانات المزرعة.</p></div></div><div class="button-stack"><button id="exportBackup" class="btn secondary">تنزيل نسخة JSON</button><button id="exportCsv" class="btn secondary">تنزيل جميع السجلات CSV</button><label class="btn secondary file-button">استيراد نسخة<input id="importBackup" type="file" accept="application/json"></label></div></article>
+          <article class="panel"><div class="panel-heading"><div><h3>حالة الاتصال</h3><p>معلومات المزامنة الحالية</p></div></div><div id="connectionDetails" class="connection-details"></div></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>

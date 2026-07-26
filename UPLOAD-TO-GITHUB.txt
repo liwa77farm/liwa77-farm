@@ -1,0 +1,16 @@
+LIWA 77 FARM — GITHUB UPLOAD
+
+1. Open: https://github.com/salem123ssmi-hash/liwa77-farm
+2. Click Add file > Upload files.
+3. Drag ALL files and folders from this package into the upload area.
+   Important: upload the files themselves, not the ZIP file.
+4. At the bottom, click Commit changes.
+5. Open Settings > Pages.
+6. Under Build and deployment:
+   Source: Deploy from a branch
+   Branch: main
+   Folder: / (root)
+7. Click Save.
+
+The public site will normally be:
+https://salem123ssmi-hash.github.io/liwa77-farm/

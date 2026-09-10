@@ -124,7 +124,7 @@ function editRecord(type,id){const record=state[type].find(x=>x.id===id),form=do
 async function removeRecord(type,id){if(!confirm('هل تريد حذف هذا السجل؟'))return;state[type]=state[type].filter(x=>x.id!==id);saveCache();renderAll();const ok=await deleteCloud(type,id);showToast(ok||!cloudConfigured?'تم حذف السجل':'حُذف محلياً وتعذر حذفه من السحابة');}
 
 function renderDashboard(){
-  const month=isoDate(new Date()).slice(0,7),h=state.harvest.filter(x=>x.date?.startsWith(month)),e=state.expenses.filter(x=>x.date?.startsWith(month));
+  const month=isoDate(new Date()).slice(0,7),h=state.harvest,e=state.expenses.filter(x=>x.date?.startsWith(month));
   const due=state.maintenance.filter(x=>x.nextDue&&daysFromToday(x.nextDue)<=14&&x.status!=='مكتمل').length;
   const open=state.tasks.filter(x=>x.status!=='مكتمل');
   const low=state.inventory.filter(x=>Number(x.minimumLevel||0)>0&&Number(x.quantity||0)<=Number(x.minimumLevel||0)).length;
